@@ -2,7 +2,7 @@
   auto_https off
 }
 
-http://{$APP_DOMAIN} {
+:80 {
   encode zstd gzip
   reverse_proxy frontend:80
 }
