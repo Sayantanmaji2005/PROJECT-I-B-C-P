@@ -1,0 +1,42 @@
+{
+  "name": "collab-platform-backend",
+  "version": "0.3.0",
+  "private": true,
+  "type": "module",
+  "prisma": {
+    "seed": "node prisma/seed.js"
+  },
+  "scripts": {
+    "dev": "node --watch src/index.js",
+    "start": "node src/index.js",
+    "test": "node ../node_modules/vitest/vitest.mjs run --config vitest.config.js",
+    "test:watch": "node ../node_modules/vitest/vitest.mjs --config vitest.config.js",
+    "test:db:reset": "node scripts/resetTestDb.js",
+    "prisma:generate": "node scripts/prisma.js generate",
+    "prisma:migrate": "node scripts/prisma.js migrate dev",
+    "prisma:migrate:deploy": "node scripts/prisma.js migrate deploy",
+    "prisma:studio": "node scripts/prisma.js studio",
+    "prisma:generate:test": "node scripts/prisma.js --env=.env.test generate",
+    "prisma:migrate:test": "node scripts/prisma.js --env=.env.test migrate dev",
+    "db:seed": "node scripts/prisma.js db seed",
+    "db:seed:test": "node scripts/prisma.js --env=.env.test db seed"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.4.1",
+    "bcryptjs": "^2.4.3",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-rate-limit": "^7.4.1",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "prisma": "^6.4.1",
+    "supertest": "^7.0.0",
+    "vitest": "^2.1.8"
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "name": "influencer-brand-collab-platform",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev:backend": "npm --prefix backend run dev",
+    "dev": "powershell -NoProfile -Command \"Start-Process powershell -ArgumentList 'npm --prefix backend run dev'; npm --prefix frontend run dev\"",
+    "check:backend": "npm --prefix backend run test",
+    "check:frontend": "npm --prefix frontend run build",
+    "ci:check": "npm run check:backend && npm run check:frontend",
+    "deploy:up": "docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build",
+    "deploy:down": "docker compose -f docker-compose.prod.yml --env-file .env.prod down",
+    "deploy:logs": "docker compose -f docker-compose.prod.yml --env-file .env.prod logs -f",
+    "deploy:migrate": "npm --prefix backend run prisma:migrate:deploy -- --env=.env.prod",
+    "db:backup": "bash ./scripts/prod/backup-db.sh",
+    "db:restore": "bash ./scripts/prod/restore-db.sh",
+    "infra:up": "docker compose up -d postgres postgres_test",
+    "infra:down": "docker compose down",
+    "infra:logs": "docker compose logs -f postgres postgres_test",
+    "db:migrate": "npm --prefix backend run prisma:migrate -- --name init",
+    "db:generate": "npm --prefix backend run prisma:generate",
+    "db:seed": "npm --prefix backend run db:seed",
+    "test": "npm run check:backend"
+  },
+  "dependencies": {
+    "effect": "^3.19.19"
+  }
+}

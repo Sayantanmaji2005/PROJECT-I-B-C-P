@@ -1,0 +1,111 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  BRAND
+  INFLUENCER
+  ADMIN
+}
+
+enum CampaignStatus {
+  OPEN
+  PAUSED
+  CLOSED
+}
+
+enum MatchStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ProposalStatus {
+  DRAFT
+  SENT
+  ACCEPTED
+  REJECTED
+}
+
+model User {
+  id            Int            @id @default(autoincrement())
+  name          String
+  email         String         @unique
+  passwordHash  String
+  role          Role
+  campaigns     Campaign[]     @relation("BrandCampaigns")
+  matches       Match[]        @relation("InfluencerMatches")
+  refreshTokens RefreshToken[]
+  auditLogs     AuditLog[]     @relation("ActorAuditLogs")
+  createdAt     DateTime       @default(now())
+}
+
+model Campaign {
+  id          Int            @id @default(autoincrement())
+  brandId     Int
+  title       String
+  budget      Int
+  description String
+  status      CampaignStatus @default(OPEN)
+  brand       User           @relation("BrandCampaigns", fields: [brandId], references: [id])
+  matches     Match[]
+  createdAt   DateTime       @default(now())
+}
+
+model Match {
+  id           Int         @id @default(autoincrement())
+  campaignId   Int
+  influencerId Int
+  status       MatchStatus @default(PENDING)
+  campaign     Campaign    @relation(fields: [campaignId], references: [id])
+  influencer   User        @relation("InfluencerMatches", fields: [influencerId], references: [id])
+  proposals    Proposal[]
+  createdAt    DateTime    @default(now())
+
+  @@unique([campaignId, influencerId])
+}
+
+model Proposal {
+  id           Int            @id @default(autoincrement())
+  matchId      Int
+  deliverables String
+  amount       Int
+  status       ProposalStatus @default(DRAFT)
+  match        Match          @relation(fields: [matchId], references: [id])
+  createdAt    DateTime       @default(now())
+}
+
+model RefreshToken {
+  id              Int       @id @default(autoincrement())
+  tokenHash       String    @unique
+  userId          Int
+  user            User      @relation(fields: [userId], references: [id])
+  expiresAt       DateTime
+  revokedAt       DateTime?
+  replacedByToken Int?
+  createdAt       DateTime  @default(now())
+
+  @@index([userId])
+}
+
+model AuditLog {
+  id         Int      @id @default(autoincrement())
+  actorId    Int?
+  actor      User?    @relation("ActorAuditLogs", fields: [actorId], references: [id])
+  action     String
+  entityType String
+  entityId   String?
+  metadata   Json?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  @@index([actorId])
+  @@index([entityType])
+  @@index([createdAt])
+}
