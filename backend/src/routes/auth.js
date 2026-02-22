@@ -6,7 +6,7 @@ import { ApiError, asyncHandler } from "../lib/http.js";
 import { createRefreshToken, hashRefreshToken, signAccessToken } from "../lib/auth.js";
 import { AUTH_RATE_LIMIT_MAX, AUTH_RATE_LIMIT_WINDOW_MS, REFRESH_TOKEN_TTL_DAYS } from "../config.js";
 import { createAuditLog } from "../lib/audit.js";
-import { clearAuthCookies, REFRESH_COOKIE, setAuthCookies } from "../lib/cookies.js";
+import { clearAuthCookies, createCsrfToken, REFRESH_COOKIE, setAuthCookies } from "../lib/cookies.js";
 import { requireAuth } from "../middleware/auth.js";
 import { validate } from "../middleware/validate.js";
 import { authLoginSchema, authSignupSchema } from "../validators/schemas.js";
@@ -63,7 +63,7 @@ router.post("/signup", authLimiter, validate(authSignupSchema), asyncHandler(asy
   const user = await prisma.user.create({ data: { name, email, passwordHash, role } });
 
   const tokens = await issueTokens(user);
-  setAuthCookies(res, tokens.accessToken, tokens.refreshToken);
+  setAuthCookies(res, tokens.accessToken, tokens.refreshToken, createCsrfToken());
   req.user = { sub: user.id, role: user.role, email: user.email };
   await createAuditLog(req, {
     action: "auth.signup",
@@ -84,7 +84,7 @@ router.post("/login", authLimiter, validate(authLoginSchema), asyncHandler(async
   if (!valid) throw new ApiError(401, "invalid credentials");
 
   const tokens = await issueTokens(user);
-  setAuthCookies(res, tokens.accessToken, tokens.refreshToken);
+  setAuthCookies(res, tokens.accessToken, tokens.refreshToken, createCsrfToken());
   req.user = { sub: user.id, role: user.role, email: user.email };
   await createAuditLog(req, {
     action: "auth.login",
@@ -139,7 +139,7 @@ router.post("/refresh", authLimiter, asyncHandler(async (req, res) => {
   });
 
   const accessToken = signAccessToken(tokenRecord.user);
-  setAuthCookies(res, accessToken, nextRefreshToken);
+  setAuthCookies(res, accessToken, nextRefreshToken, createCsrfToken());
 
   req.user = { sub: tokenRecord.user.id, role: tokenRecord.user.role, email: tokenRecord.user.email };
   await createAuditLog(req, {

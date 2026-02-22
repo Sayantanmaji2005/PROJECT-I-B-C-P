@@ -2,6 +2,7 @@ import express from "express";
 import { prisma } from "../lib/prisma.js";
 import { ApiError, asyncHandler } from "../lib/http.js";
 import { createAuditLog } from "../lib/audit.js";
+import { publishNotification } from "../lib/notifications.js";
 import { requireAuth } from "../middleware/auth.js";
 import { validate } from "../middleware/validate.js";
 import { createProposalSchema, proposalStatusSchema } from "../validators/schemas.js";
@@ -47,6 +48,12 @@ router.post("/", requireAuth, validate(createProposalSchema), asyncHandler(async
     entityId: proposal.id,
     metadata: { matchId: proposal.matchId, amount: proposal.amount }
   });
+  publishNotification({
+    type: "proposal.created",
+    message: `New proposal submitted for match #${proposal.matchId}`,
+    userIds: [match.campaign.brandId, match.influencerId],
+    data: { proposalId: proposal.id, matchId: proposal.matchId }
+  });
 
   return res.status(201).json(proposal);
 }));
@@ -78,6 +85,12 @@ router.patch("/:id/status", requireAuth, validate(proposalStatusSchema), asyncHa
     entityType: "proposal",
     entityId: updated.id,
     metadata: { status: updated.status }
+  });
+  publishNotification({
+    type: "proposal.status.updated",
+    message: `Proposal #${updated.id} moved to ${updated.status}`,
+    userIds: [proposal.match.influencerId, proposal.match.campaign.brandId],
+    data: { proposalId: updated.id, status: updated.status }
   });
 
   return res.json(updated);

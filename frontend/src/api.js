@@ -4,6 +4,16 @@ function buildUrl(path) {
   return `${API_BASE}${path}`;
 }
 
+function readCookie(name) {
+  const target = `${name}=`;
+  const parts = document.cookie ? document.cookie.split(";") : [];
+  for (const part of parts) {
+    const value = part.trim();
+    if (value.startsWith(target)) return decodeURIComponent(value.slice(target.length));
+  }
+  return "";
+}
+
 async function refreshSession() {
   const res = await fetch(buildUrl("/auth/refresh"), {
     method: "POST",
@@ -35,11 +45,15 @@ async function parseResponse(res) {
 }
 
 async function request(path, options = {}, retry = true) {
+  const method = String(options.method || "GET").toUpperCase();
+  const csrfToken = ["POST", "PUT", "PATCH", "DELETE"].includes(method) ? readCookie("cp_csrf") : "";
+
   const res = await fetch(buildUrl(path), {
     ...options,
     credentials: "include",
     headers: {
       "Content-Type": "application/json",
+      ...(csrfToken ? { "x-csrf-token": csrfToken } : {}),
       ...(options.headers || {})
     }
   });
@@ -92,6 +106,10 @@ export function fetchMatches() {
   return request("/api/matches");
 }
 
+export function fetchMatchRecommendations(campaignId) {
+  return request(`/api/matches/recommendations?campaignId=${campaignId}`);
+}
+
 export function createMatch(payload) {
   return request("/api/matches", { method: "POST", body: JSON.stringify(payload) });
 }
@@ -110,4 +128,101 @@ export function createProposal(payload) {
 
 export function updateProposalStatus(id, status) {
   return request(`/api/proposals/${id}/status`, { method: "PATCH", body: JSON.stringify({ status }) });
+}
+
+export function fetchMyProfile() {
+  return request("/api/users/profile");
+}
+
+export function updateInfluencerProfile(payload) {
+  return request("/api/users/profile", { method: "PATCH", body: JSON.stringify(payload) });
+}
+
+export function fetchApplications() {
+  return request("/api/applications");
+}
+
+export function createApplication(payload) {
+  return request("/api/applications", { method: "POST", body: JSON.stringify(payload) });
+}
+
+export function updateApplicationStatus(id, status) {
+  return request(`/api/applications/${id}/status`, { method: "PATCH", body: JSON.stringify({ status }) });
+}
+
+export function fetchTransactions() {
+  return request("/api/transactions");
+}
+
+export function createTransaction(payload) {
+  return request("/api/transactions", { method: "POST", body: JSON.stringify(payload) });
+}
+
+export function releaseTransaction(id) {
+  return request(`/api/transactions/${id}/release`, { method: "PATCH" });
+}
+
+export function refundTransaction(id) {
+  return request(`/api/transactions/${id}/refund`, { method: "PATCH" });
+}
+
+export function fetchTransactionReceipt(id) {
+  return request(`/api/transactions/${id}/receipt`);
+}
+
+export function fetchBrandAnalytics() {
+  return request("/api/analytics/brand");
+}
+
+export function fetchInfluencerAnalytics() {
+  return request("/api/analytics/influencer");
+}
+
+export function fetchRecentNotifications() {
+  return request("/api/notifications/recent");
+}
+
+export function createNotificationsEventSource(onMessage) {
+  const streamUrl = buildUrl("/api/notifications/stream");
+  const source = new EventSource(streamUrl, { withCredentials: true });
+  source.onmessage = (event) => {
+    try {
+      onMessage(JSON.parse(event.data));
+    } catch (_error) {
+      // Ignore malformed notification payloads.
+    }
+  };
+  return source;
+}
+
+export function fetchAdminOverview() {
+  return request("/api/admin/overview");
+}
+
+export function fetchAdminUsers(role) {
+  const suffix = role ? `?role=${encodeURIComponent(role)}` : "";
+  return request(`/api/admin/users${suffix}`);
+}
+
+export function updateAdminFraudFlag(userId, isFraudFlagged) {
+  return request(`/api/admin/users/${userId}/fraud-flag`, {
+    method: "PATCH",
+    body: JSON.stringify({ isFraudFlagged })
+  });
+}
+
+export function fetchAdminAuditLogs(limit = 50) {
+  return request(`/api/admin/audit-logs?limit=${limit}`);
+}
+
+export function runAdminFraudScan() {
+  return request("/api/admin/fraud-scan", { method: "POST" });
+}
+
+export function fetchMediaAssets() {
+  return request("/api/media");
+}
+
+export function createMediaAsset(payload) {
+  return request("/api/media", { method: "POST", body: JSON.stringify(payload) });
 }

@@ -7,7 +7,9 @@ dotenv.config();
 process.env.DATABASE_URL ||= "postgresql://postgres:postgres@localhost:5433/collab_platform_test?schema=public";
 
 async function main() {
-  await prisma.$executeRawUnsafe('TRUNCATE TABLE "RefreshToken", "Proposal", "Match", "Campaign", "User" RESTART IDENTITY CASCADE;');
+  await prisma.$executeRawUnsafe(
+    'TRUNCATE TABLE "MediaAsset", "Transaction", "Application", "RefreshToken", "Proposal", "Match", "Campaign", "AuditLog", "User" RESTART IDENTITY CASCADE;'
+  );
 }
 
 main()

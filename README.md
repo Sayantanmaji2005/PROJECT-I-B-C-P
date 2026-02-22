@@ -79,7 +79,14 @@ Production-ready full-stack platform starter for influencer-brand collaboration 
 ## API Summary
 - Auth: `/auth/signup`, `/auth/login`, `/auth/refresh`, `/auth/logout`, `/auth/me`
 - Campaigns: `/api/campaigns`, `/api/campaigns/mine`, `/api/campaigns/:id/close`
-- Matches: `/api/matches`
+- Matches: `/api/matches`, `/api/matches/recommendations`
 - Proposals: `/api/proposals`, `/api/proposals/:id/status`
-- Users: `/api/users/influencers`
+- Users: `/api/users/influencers`, `/api/users/profile`
+- Applications: `/api/applications`, `/api/applications/:id/status`
+- Transactions: `/api/transactions`, `/api/transactions/:id/release`, `/api/transactions/:id/refund`, `/api/transactions/:id/receipt`
+- Analytics: `/api/analytics/brand`, `/api/analytics/influencer`
+- Notifications: `/api/notifications/stream`, `/api/notifications/recent`
+- Admin: `/api/admin/overview`, `/api/admin/users`, `/api/admin/users/:id/fraud-flag`, `/api/admin/fraud-scan`, `/api/admin/audit-logs`
+- Media: `/api/media`
+- API Docs: `/api/docs`, `/api/docs/openapi.json`
 - Health: `/live`, `/ready`, `/health`

@@ -25,8 +25,31 @@ router.get("/mine", requireAuth, requireRoles("BRAND", "ADMIN"), asyncHandler(as
 }));
 
 router.post("/", requireAuth, requireRoles("BRAND"), validate(createCampaignSchema), asyncHandler(async (req, res) => {
+  const {
+    title,
+    budget,
+    description,
+    targetAudience,
+    targetNiche,
+    startDate,
+    endDate,
+    deliverables,
+    objective
+  } = req.body;
+
   const campaign = await prisma.campaign.create({
-    data: { brandId: Number(req.user.sub), title: req.body.title, budget: req.body.budget, description: req.body.description }
+    data: {
+      brandId: Number(req.user.sub),
+      title,
+      budget,
+      description,
+      targetAudience,
+      targetNiche,
+      startDate,
+      endDate,
+      deliverables,
+      objective
+    }
   });
 
   await createAuditLog(req, {

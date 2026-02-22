@@ -8,11 +8,19 @@ import { randomUUID } from "node:crypto";
 import { API_RATE_LIMIT_MAX, API_RATE_LIMIT_WINDOW_MS, CORS_ORIGIN, LOG_FORMAT, TRUST_PROXY } from "./config.js";
 import { prisma } from "./lib/prisma.js";
 import { errorHandler } from "./lib/http.js";
+import { requireCsrf } from "./middleware/csrf.js";
 import authRoutes from "./routes/auth.js";
 import campaignRoutes from "./routes/campaigns.js";
 import matchRoutes from "./routes/matches.js";
 import proposalRoutes from "./routes/proposals.js";
 import userRoutes from "./routes/users.js";
+import applicationRoutes from "./routes/applications.js";
+import transactionRoutes from "./routes/transactions.js";
+import analyticsRoutes from "./routes/analytics.js";
+import notificationRoutes from "./routes/notifications.js";
+import adminRoutes from "./routes/admin.js";
+import docsRoutes from "./routes/docs.js";
+import mediaRoutes from "./routes/media.js";
 
 export function createApp() {
   const app = express();
@@ -80,10 +88,18 @@ export function createApp() {
 
   app.use("/auth", authRoutes);
   app.use("/api", apiLimiter);
+  app.use("/api", requireCsrf);
   app.use("/api/campaigns", campaignRoutes);
   app.use("/api/matches", matchRoutes);
   app.use("/api/proposals", proposalRoutes);
   app.use("/api/users", userRoutes);
+  app.use("/api/applications", applicationRoutes);
+  app.use("/api/transactions", transactionRoutes);
+  app.use("/api/analytics", analyticsRoutes);
+  app.use("/api/notifications", notificationRoutes);
+  app.use("/api/admin", adminRoutes);
+  app.use("/api/docs", docsRoutes);
+  app.use("/api/media", mediaRoutes);
 
   app.use(errorHandler);
 
