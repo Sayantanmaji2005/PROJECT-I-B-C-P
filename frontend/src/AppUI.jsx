@@ -338,7 +338,7 @@ export default function App() {
     if (!user || !autoRefresh) return undefined;
     const timer = setInterval(() => {
       loadData({ silent: true });
-    }, 20000);
+    }, 45000);
     return () => clearInterval(timer);
   }, [user, autoRefresh]);
 
@@ -348,7 +348,6 @@ export default function App() {
     const source = createNotificationsEventSource((payload) => {
       if (!payload || payload.type === "heartbeat" || payload.type === "connected") return;
       setNotifications((previous) => [payload, ...previous].slice(0, 30));
-      loadData({ silent: true });
     });
 
     source.onerror = () => {
@@ -413,116 +412,7 @@ export default function App() {
     document.documentElement.setAttribute("data-role-theme", roleTheme);
   }, [roleTheme]);
 
-  useEffect(() => {
-    const targets = Array.from(
-      document.querySelectorAll(".panel, .auth-card, .stat, .control-panel, .btn-primary")
-    );
-
-    if (!targets.length) return undefined;
-
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      return undefined;
-    }
-
-    const states = new Map();
-    let rafId = null;
-
-    const onMove = (event) => {
-      const el = event.currentTarget;
-      const state = states.get(el);
-      if (!state) return;
-      const rect = el.getBoundingClientRect();
-      const x = event.clientX - rect.left;
-      const y = event.clientY - rect.top;
-      const px = Math.max(0, Math.min(100, (x / rect.width) * 100));
-      const py = Math.max(0, Math.min(100, (y / rect.height) * 100));
-      const rotateY = ((x / rect.width) * 2 - 1) * 1.8;
-      const rotateX = ((y / rect.height) * 2 - 1) * -1.8;
-
-      state.targetX = px;
-      state.targetY = py;
-      state.targetRx = rotateX;
-      state.targetRy = rotateY;
-    };
-
-    const onLeave = (event) => {
-      const state = states.get(event.currentTarget);
-      if (!state) return;
-      state.targetX = 50;
-      state.targetY = 50;
-      state.targetRx = 0;
-      state.targetRy = 0;
-    };
-
-    const animate = () => {
-      let stillAnimating = false;
-      for (const [el, state] of states.entries()) {
-        state.x += (state.targetX - state.x) * 0.14;
-        state.y += (state.targetY - state.y) * 0.14;
-        state.rx += (state.targetRx - state.rx) * 0.14;
-        state.ry += (state.targetRy - state.ry) * 0.14;
-
-        el.style.setProperty("--mx", `${state.x.toFixed(2)}%`);
-        el.style.setProperty("--my", `${state.y.toFixed(2)}%`);
-        el.style.setProperty("--rx", `${state.rx.toFixed(2)}deg`);
-        el.style.setProperty("--ry", `${state.ry.toFixed(2)}deg`);
-
-        if (
-          Math.abs(state.targetX - state.x) > 0.05 ||
-          Math.abs(state.targetY - state.y) > 0.05 ||
-          Math.abs(state.targetRx - state.rx) > 0.02 ||
-          Math.abs(state.targetRy - state.ry) > 0.02
-        ) {
-          stillAnimating = true;
-        }
-      }
-
-      if (stillAnimating) {
-        rafId = window.requestAnimationFrame(animate);
-      } else {
-        rafId = null;
-      }
-    };
-
-    const ensureAnimationLoop = () => {
-      if (rafId === null) {
-        rafId = window.requestAnimationFrame(animate);
-      }
-    };
-
-    for (const el of targets) {
-      states.set(el, {
-        x: 50,
-        y: 50,
-        rx: 0,
-        ry: 0,
-        targetX: 50,
-        targetY: 50,
-        targetRx: 0,
-        targetRy: 0
-      });
-      el.style.setProperty("--mx", "50%");
-      el.style.setProperty("--my", "50%");
-      el.style.setProperty("--rx", "0deg");
-      el.style.setProperty("--ry", "0deg");
-      el.addEventListener("pointermove", onMove, { passive: true });
-      el.addEventListener("pointermove", ensureAnimationLoop, { passive: true });
-      el.addEventListener("pointerleave", onLeave);
-      el.addEventListener("pointerleave", ensureAnimationLoop);
-    }
-
-    return () => {
-      if (rafId !== null) {
-        window.cancelAnimationFrame(rafId);
-      }
-      for (const el of targets) {
-        el.removeEventListener("pointermove", onMove);
-        el.removeEventListener("pointermove", ensureAnimationLoop);
-        el.removeEventListener("pointerleave", onLeave);
-        el.removeEventListener("pointerleave", ensureAnimationLoop);
-      }
-    };
-  }, [user]);
+  // Disabled expensive pointer-motion effect for smoother runtime performance.
 
   async function handleAuthSubmit(event) {
     event.preventDefault();
@@ -854,6 +744,9 @@ export default function App() {
           ) : null}
           {authMode === "login" && authRole === "BRAND" ? (
             <p className="form-hint">Brand email: brand.demo@collab.local | Password: Password123!</p>
+          ) : null}
+          {authMode === "login" && authRole === "ADMIN" ? (
+            <p className="form-hint">Admin email: admin@gmail.com | Password: admin123</p>
           ) : null}
 
           <form className="form" onSubmit={handleAuthSubmit}>

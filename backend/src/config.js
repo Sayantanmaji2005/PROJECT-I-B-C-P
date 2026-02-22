@@ -22,3 +22,6 @@ export const COOKIE_SAME_SITE = process.env.COOKIE_SAME_SITE || "lax";
 export const ACCESS_COOKIE_MAX_AGE_MS = Number(process.env.ACCESS_COOKIE_MAX_AGE_MS || 15 * 60 * 1000);
 export const REFRESH_COOKIE_MAX_AGE_MS = Number(process.env.REFRESH_COOKIE_MAX_AGE_MS || 30 * 24 * 60 * 60 * 1000);
 export const TRUST_PROXY = String(process.env.TRUST_PROXY || "false").toLowerCase() === "true";
+
+export const DEFAULT_ADMIN_EMAIL = process.env.DEFAULT_ADMIN_EMAIL || "admin@gmail.com";
+export const DEFAULT_ADMIN_PASSWORD = process.env.DEFAULT_ADMIN_PASSWORD || "admin123";

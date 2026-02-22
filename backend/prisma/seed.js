@@ -29,11 +29,11 @@ async function main() {
   });
 
   await prisma.user.upsert({
-    where: { email: "admin.demo@collab.local" },
-    update: { name: "Demo Admin", role: "ADMIN" },
+    where: { email: "admin@gmail.com" },
+    update: { name: "Platform Admin", role: "ADMIN" },
     create: {
-      name: "Demo Admin",
-      email: "admin.demo@collab.local",
+      name: "Platform Admin",
+      email: "admin@gmail.com",
       role: "ADMIN",
       passwordHash
     }
@@ -92,7 +92,7 @@ async function main() {
   console.log("Seed complete");
   console.log("Brand login: brand.demo@collab.local / Password123!");
   console.log("Influencer login: influencer.demo@collab.local / Password123!");
-  console.log("Admin login: admin.demo@collab.local / Password123!");
+  console.log("Admin login: admin@gmail.com / admin123");
 }
 
 main()
