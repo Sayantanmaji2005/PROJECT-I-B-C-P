@@ -7,6 +7,12 @@ export function requireCsrf(req, res, next) {
     return next();
   }
 
+  // Bearer-token requests are not vulnerable to browser CSRF.
+  const authHeader = String(req.headers.authorization || "");
+  if (authHeader.startsWith("Bearer ")) {
+    return next();
+  }
+
   if (!MUTATING_METHODS.has(req.method)) {
     return next();
   }

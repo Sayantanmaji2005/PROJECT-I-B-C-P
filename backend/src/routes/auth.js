@@ -25,8 +25,8 @@ function safeUser(user) {
   return { id: user.id, name: user.name, email: user.email, role: user.role };
 }
 
-function authResponse(user, csrfToken) {
-  return { user: safeUser(user), csrfToken };
+function authResponse(user, accessToken, csrfToken) {
+  return { user: safeUser(user), accessToken, csrfToken };
 }
 
 function refreshExpiryDate() {
@@ -76,7 +76,7 @@ router.post("/signup", authLimiter, validate(authSignupSchema), asyncHandler(asy
     entityId: user.id
   });
 
-  return res.status(201).json(authResponse(user, csrfToken));
+  return res.status(201).json(authResponse(user, tokens.accessToken, csrfToken));
 }));
 
 router.post("/login", authLimiter, validate(authLoginSchema), asyncHandler(async (req, res) => {
@@ -98,7 +98,7 @@ router.post("/login", authLimiter, validate(authLoginSchema), asyncHandler(async
     entityId: user.id
   });
 
-  return res.json(authResponse(user, csrfToken));
+  return res.json(authResponse(user, tokens.accessToken, csrfToken));
 }));
 
 router.post("/refresh", authLimiter, asyncHandler(async (req, res) => {
@@ -155,7 +155,7 @@ router.post("/refresh", authLimiter, asyncHandler(async (req, res) => {
     entityId: tokenRecord.user.id
   });
 
-  return res.json({ ok: true, csrfToken });
+  return res.json({ ok: true, accessToken, csrfToken });
 }));
 
 router.post("/logout", requireAuth, asyncHandler(async (req, res) => {

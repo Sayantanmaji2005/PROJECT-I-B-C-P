@@ -1,8 +1,34 @@
 const API_BASE = (import.meta.env.VITE_API_BASE || "").replace(/\/$/, "");
+const ACCESS_TOKEN_STORAGE_KEY = "cp_access_token";
+
+function readStoredAccessToken() {
+  if (typeof window === "undefined") return "";
+  try {
+    return window.localStorage.getItem(ACCESS_TOKEN_STORAGE_KEY) || "";
+  } catch (_error) {
+    return "";
+  }
+}
+
+let accessToken = readStoredAccessToken();
 let csrfToken = "";
 
 function buildUrl(path) {
   return `${API_BASE}${path}`;
+}
+
+function setAccessToken(nextToken) {
+  accessToken = typeof nextToken === "string" ? nextToken : "";
+  if (typeof window === "undefined") return;
+  try {
+    if (accessToken) {
+      window.localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, accessToken);
+    } else {
+      window.localStorage.removeItem(ACCESS_TOKEN_STORAGE_KEY);
+    }
+  } catch (_error) {
+    // Ignore storage failures (private mode, disabled storage, etc.).
+  }
 }
 
 function setCsrfToken(nextToken) {
@@ -21,8 +47,10 @@ async function refreshSession() {
 
   try {
     const payload = await res.json();
+    setAccessToken(payload?.accessToken || "");
     setCsrfToken(payload?.csrfToken || "");
   } catch (_error) {
+    setAccessToken("");
     setCsrfToken("");
   }
 }
@@ -47,12 +75,16 @@ async function parseResponse(res) {
   if (payload && typeof payload === "object" && "csrfToken" in payload) {
     setCsrfToken(payload.csrfToken);
   }
+  if (payload && typeof payload === "object" && "accessToken" in payload) {
+    setAccessToken(payload.accessToken);
+  }
   return payload;
 }
 
 async function request(path, options = {}, retry = true) {
   const method = String(options.method || "GET").toUpperCase();
-  const requiresCsrf = path.startsWith("/api/") && ["POST", "PUT", "PATCH", "DELETE"].includes(method);
+  const isMutating = ["POST", "PUT", "PATCH", "DELETE"].includes(method);
+  const requiresCsrf = !accessToken && path.startsWith("/api/") && isMutating;
   if (requiresCsrf && !csrfToken) {
     await refreshSession();
   }
@@ -61,7 +93,8 @@ async function request(path, options = {}, retry = true) {
     ...options,
     credentials: "include",
     headers: {
-      "Content-Type": "application/json",
+      ...(options.body ? { "Content-Type": "application/json" } : {}),
+      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
       ...(requiresCsrf && csrfToken ? { "x-csrf-token": csrfToken } : {}),
       ...(options.headers || {})
     }
@@ -72,6 +105,8 @@ async function request(path, options = {}, retry = true) {
       await refreshSession();
       return request(path, options, false);
     } catch (_error) {
+      setAccessToken("");
+      setCsrfToken("");
       throw new Error("session expired");
     }
   }
@@ -87,9 +122,13 @@ export function login(payload) {
   return request("/auth/login", { method: "POST", body: JSON.stringify(payload) });
 }
 
-export function logout() {
-  setCsrfToken("");
-  return request("/auth/logout", { method: "POST" });
+export async function logout() {
+  try {
+    return await request("/auth/logout", { method: "POST" });
+  } finally {
+    setAccessToken("");
+    setCsrfToken("");
+  }
 }
 
 export function me() {
