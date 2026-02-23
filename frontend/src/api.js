@@ -1,17 +1,12 @@
 const API_BASE = (import.meta.env.VITE_API_BASE || "").replace(/\/$/, "");
+let csrfToken = "";
 
 function buildUrl(path) {
   return `${API_BASE}${path}`;
 }
 
-function readCookie(name) {
-  const target = `${name}=`;
-  const parts = document.cookie ? document.cookie.split(";") : [];
-  for (const part of parts) {
-    const value = part.trim();
-    if (value.startsWith(target)) return decodeURIComponent(value.slice(target.length));
-  }
-  return "";
+function setCsrfToken(nextToken) {
+  csrfToken = typeof nextToken === "string" ? nextToken : "";
 }
 
 async function refreshSession() {
@@ -22,6 +17,13 @@ async function refreshSession() {
 
   if (!res.ok) {
     throw new Error("session expired");
+  }
+
+  try {
+    const payload = await res.json();
+    setCsrfToken(payload?.csrfToken || "");
+  } catch (_error) {
+    setCsrfToken("");
   }
 }
 
@@ -41,19 +43,26 @@ async function parseResponse(res) {
     return null;
   }
 
-  return res.json();
+  const payload = await res.json();
+  if (payload && typeof payload === "object" && "csrfToken" in payload) {
+    setCsrfToken(payload.csrfToken);
+  }
+  return payload;
 }
 
 async function request(path, options = {}, retry = true) {
   const method = String(options.method || "GET").toUpperCase();
-  const csrfToken = ["POST", "PUT", "PATCH", "DELETE"].includes(method) ? readCookie("cp_csrf") : "";
+  const requiresCsrf = path.startsWith("/api/") && ["POST", "PUT", "PATCH", "DELETE"].includes(method);
+  if (requiresCsrf && !csrfToken) {
+    await refreshSession();
+  }
 
   const res = await fetch(buildUrl(path), {
     ...options,
     credentials: "include",
     headers: {
       "Content-Type": "application/json",
-      ...(csrfToken ? { "x-csrf-token": csrfToken } : {}),
+      ...(requiresCsrf && csrfToken ? { "x-csrf-token": csrfToken } : {}),
       ...(options.headers || {})
     }
   });
@@ -79,6 +88,7 @@ export function login(payload) {
 }
 
 export function logout() {
+  setCsrfToken("");
   return request("/auth/logout", { method: "POST" });
 }
 

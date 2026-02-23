@@ -25,6 +25,10 @@ function safeUser(user) {
   return { id: user.id, name: user.name, email: user.email, role: user.role };
 }
 
+function authResponse(user, csrfToken) {
+  return { user: safeUser(user), csrfToken };
+}
+
 function refreshExpiryDate() {
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + REFRESH_TOKEN_TTL_DAYS);
@@ -63,7 +67,8 @@ router.post("/signup", authLimiter, validate(authSignupSchema), asyncHandler(asy
   const user = await prisma.user.create({ data: { name, email, passwordHash, role } });
 
   const tokens = await issueTokens(user);
-  setAuthCookies(res, tokens.accessToken, tokens.refreshToken, createCsrfToken());
+  const csrfToken = createCsrfToken();
+  setAuthCookies(res, tokens.accessToken, tokens.refreshToken, csrfToken);
   req.user = { sub: user.id, role: user.role, email: user.email };
   await createAuditLog(req, {
     action: "auth.signup",
@@ -71,7 +76,7 @@ router.post("/signup", authLimiter, validate(authSignupSchema), asyncHandler(asy
     entityId: user.id
   });
 
-  return res.status(201).json({ user: safeUser(user) });
+  return res.status(201).json(authResponse(user, csrfToken));
 }));
 
 router.post("/login", authLimiter, validate(authLoginSchema), asyncHandler(async (req, res) => {
@@ -84,7 +89,8 @@ router.post("/login", authLimiter, validate(authLoginSchema), asyncHandler(async
   if (!valid) throw new ApiError(401, "invalid credentials");
 
   const tokens = await issueTokens(user);
-  setAuthCookies(res, tokens.accessToken, tokens.refreshToken, createCsrfToken());
+  const csrfToken = createCsrfToken();
+  setAuthCookies(res, tokens.accessToken, tokens.refreshToken, csrfToken);
   req.user = { sub: user.id, role: user.role, email: user.email };
   await createAuditLog(req, {
     action: "auth.login",
@@ -92,7 +98,7 @@ router.post("/login", authLimiter, validate(authLoginSchema), asyncHandler(async
     entityId: user.id
   });
 
-  return res.json({ user: safeUser(user) });
+  return res.json(authResponse(user, csrfToken));
 }));
 
 router.post("/refresh", authLimiter, asyncHandler(async (req, res) => {
@@ -139,7 +145,8 @@ router.post("/refresh", authLimiter, asyncHandler(async (req, res) => {
   });
 
   const accessToken = signAccessToken(tokenRecord.user);
-  setAuthCookies(res, accessToken, nextRefreshToken, createCsrfToken());
+  const csrfToken = createCsrfToken();
+  setAuthCookies(res, accessToken, nextRefreshToken, csrfToken);
 
   req.user = { sub: tokenRecord.user.id, role: tokenRecord.user.role, email: tokenRecord.user.email };
   await createAuditLog(req, {
@@ -148,7 +155,7 @@ router.post("/refresh", authLimiter, asyncHandler(async (req, res) => {
     entityId: tokenRecord.user.id
   });
 
-  return res.json({ ok: true });
+  return res.json({ ok: true, csrfToken });
 }));
 
 router.post("/logout", requireAuth, asyncHandler(async (req, res) => {
