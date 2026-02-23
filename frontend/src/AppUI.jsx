@@ -743,7 +743,7 @@ export default function App() {
             <p className="form-hint">Admin signup is disabled. Use admin login credentials.</p>
           ) : null}
           {authMode === "login" && authRole === "BRAND" ? (
-            <p className="form-hint">Brand email: brand.ibcpapp@gmail.com | Password: Brand@12345</p>
+            <p className="form-hint">Brand login uses your own signup email and password.</p>
           ) : null}
           {authMode === "login" && authRole === "ADMIN" ? (
             <p className="form-hint">Admin email: admin@gmail.com | Password: ChangeMe123!</p>
