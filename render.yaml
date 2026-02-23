@@ -5,8 +5,7 @@ services:
     rootDir: backend
     plan: free
     buildCommand: npm install --include=dev && npm run prisma:generate
-    preDeployCommand: npm run prisma:migrate:deploy
-    startCommand: npm run start
+    startCommand: npm run prisma:migrate:deploy && npm run start
     healthCheckPath: /ready
     envVars:
       - key: DATABASE_URL
