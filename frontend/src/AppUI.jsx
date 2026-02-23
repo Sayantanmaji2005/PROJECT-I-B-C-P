@@ -743,10 +743,10 @@ export default function App() {
             <p className="form-hint">Admin signup is disabled. Use admin login credentials.</p>
           ) : null}
           {authMode === "login" && authRole === "BRAND" ? (
-            <p className="form-hint">Brand email: brand.demo@collab.local | Password: Password123!</p>
+            <p className="form-hint">Brand email: brand.ibcpapp@gmail.com | Password: Brand@12345</p>
           ) : null}
           {authMode === "login" && authRole === "ADMIN" ? (
-            <p className="form-hint">Admin email: admin@gmail.com | Password: admin123</p>
+            <p className="form-hint">Admin email: admin@gmail.com | Password: ChangeMe123!</p>
           ) : null}
 
           <form className="form" onSubmit={handleAuthSubmit}>
