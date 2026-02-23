@@ -51,7 +51,6 @@ services:
     name: ibcpapp-web
     runtime: static
     rootDir: frontend
-    plan: free
     buildCommand: npm install --include=dev && npm run build
     staticPublishPath: ./dist
     routes:
