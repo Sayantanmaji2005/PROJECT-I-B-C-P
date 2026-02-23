@@ -20,6 +20,10 @@ services:
     restart: unless-stopped
     env_file:
       - backend/.env.prod
+    environment:
+      CORS_ORIGIN: https://${APP_DOMAIN}
+      COOKIE_DOMAIN: ${APP_DOMAIN}
+      COOKIE_SECURE: "true"
     depends_on:
       postgres:
         condition: service_healthy

@@ -1,0 +1,70 @@
+services:
+  - type: web
+    name: ibcpapp-api
+    runtime: node
+    rootDir: backend
+    plan: free
+    buildCommand: npm install --include=dev && npm run prisma:generate
+    preDeployCommand: npm run prisma:migrate:deploy
+    startCommand: npm run start
+    healthCheckPath: /ready
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ibcpapp-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ACCESS_TOKEN_TTL
+        value: 15m
+      - key: REFRESH_TOKEN_TTL_DAYS
+        value: "30"
+      - key: CORS_ORIGIN
+        value: https://ibcpapp-web.onrender.com
+      - key: AUTH_RATE_LIMIT_WINDOW_MS
+        value: "600000"
+      - key: AUTH_RATE_LIMIT_MAX
+        value: "25"
+      - key: API_RATE_LIMIT_WINDOW_MS
+        value: "60000"
+      - key: API_RATE_LIMIT_MAX
+        value: "120"
+      - key: LOG_FORMAT
+        value: json
+      - key: COOKIE_DOMAIN
+        value: ""
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: COOKIE_SAME_SITE
+        value: lax
+      - key: ACCESS_COOKIE_MAX_AGE_MS
+        value: "900000"
+      - key: REFRESH_COOKIE_MAX_AGE_MS
+        value: "2592000000"
+      - key: TRUST_PROXY
+        value: "true"
+      - key: DEFAULT_ADMIN_EMAIL
+        value: admin@gmail.com
+      - key: DEFAULT_ADMIN_PASSWORD
+        value: ChangeMe123!
+
+  - type: web
+    name: ibcpapp-web
+    runtime: static
+    rootDir: frontend
+    plan: free
+    buildCommand: npm install --include=dev && npm run build
+    staticPublishPath: ./dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_BASE
+        value: https://ibcpapp-api.onrender.com
+
+databases:
+  - name: ibcpapp-db
+    plan: free
+    databaseName: collab_platform
+    user: collab_platform_user

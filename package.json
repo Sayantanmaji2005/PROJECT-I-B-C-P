@@ -16,7 +16,7 @@
     "deploy:up": "docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build",
     "deploy:down": "docker compose -f docker-compose.prod.yml --env-file .env.prod down",
     "deploy:logs": "docker compose -f docker-compose.prod.yml --env-file .env.prod logs -f",
-    "deploy:migrate": "npm --prefix backend run prisma:migrate:deploy -- --env=.env.prod",
+    "deploy:migrate": "docker compose -f docker-compose.prod.yml --env-file .env.prod exec -T backend npm run prisma:migrate:deploy",
     "db:backup": "bash ./scripts/prod/backup-db.sh",
     "db:restore": "bash ./scripts/prod/restore-db.sh",
     "infra:up": "docker compose up -d postgres postgres_test",

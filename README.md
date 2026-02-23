@@ -76,6 +76,11 @@ Production-ready full-stack platform starter for influencer-brand collaboration 
 5. `npm run deploy:migrate`
 6. Tail logs with `npm run deploy:logs`
 
+## Cloud Deploy (No Domain Needed)
+- Use Render Blueprint with auto-provisioned `*.onrender.com` URLs.
+- Setup guide: `docs/RENDER_DEPLOY.md`
+- Blueprint file: `render.yaml`
+
 ## API Summary
 - Auth: `/auth/signup`, `/auth/login`, `/auth/refresh`, `/auth/logout`, `/auth/me`
 - Campaigns: `/api/campaigns`, `/api/campaigns/mine`, `/api/campaigns/:id/close`
